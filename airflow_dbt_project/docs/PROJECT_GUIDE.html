@@ -1,0 +1,912 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Walmart Lakehouse Pipeline – Project Guide</title>
+<style>
+:root{
+  --bg:#f5f7fa; --surface:#ffffff; --surface2:#eef1f6; --text:#18202e; --muted:#586277; --line:#d6dce6;
+  --accent:#2f5bea; --accent-bg:#e6ecfd;
+  --bronze:#a85d17; --bronze-bg:#f8e9da;
+  --silver:#566377; --silver-bg:#e8ecf2;
+  --gold:#9a7a0a; --gold-bg:#faf0c8;
+  --ok:#17794f; --ok-bg:#dcf3e8; --warn:#b4410c; --warn-bg:#fde8dc;
+  --code-bg:#0f1729; --code-text:#e3e9f5; --code-dim:#8b97b0;
+  --shadow:0 1px 2px rgba(20,30,50,.06),0 4px 14px rgba(20,30,50,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1320; --surface:#161d2e; --surface2:#1d2640; --text:#e6ebf5; --muted:#9aa5bd; --line:#2b3550;
+    --accent:#7b9bff; --accent-bg:#1e2a52;
+    --bronze:#e0985a; --bronze-bg:#3a2a1b;
+    --silver:#a9b6cc; --silver-bg:#252e42;
+    --gold:#e6c75a; --gold-bg:#3a3315;
+    --ok:#5fd09b; --ok-bg:#16382b; --warn:#ff9d6e; --warn-bg:#3d2316;
+    --code-bg:#0a0f1c; --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+    --bg:#0e1320; --surface:#161d2e; --surface2:#1d2640; --text:#e6ebf5; --muted:#9aa5bd; --line:#2b3550;
+    --accent:#7b9bff; --accent-bg:#1e2a52;
+    --bronze:#e0985a; --bronze-bg:#3a2a1b;
+    --silver:#a9b6cc; --silver-bg:#252e42;
+    --gold:#e6c75a; --gold-bg:#3a3315;
+    --ok:#5fd09b; --ok-bg:#16382b; --warn:#ff9d6e; --warn-bg:#3d2316;
+    --code-bg:#0a0f1c; --shadow:none;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.layout{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:100vh}
+nav.side{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;padding:24px 18px;border-right:1px solid var(--line);background:var(--surface)}
+nav.side h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+nav.side a{display:block;padding:6px 10px;margin:2px 0;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px}
+nav.side a:hover{background:var(--surface2)}
+nav.side a .n{display:inline-block;width:22px;color:var(--muted)}
+main{padding:0 0 80px}
+.wrap{max-width:980px;margin:0 auto;padding:0 28px}
+header.hero{padding:56px 0 36px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,var(--accent-bg),transparent)}
+.hero h1{font-size:clamp(28px,4vw,42px);line-height:1.15;margin:0 0 12px;letter-spacing:-.02em}
+.hero p.lead{font-size:18px;color:var(--muted);max-width:760px;margin:0 0 20px}
+.badges{display:flex;flex-wrap:wrap;gap:8px}
+.badge{font-size:12.5px;padding:4px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--text)}
+section{padding:44px 0 8px;scroll-margin-top:8px}
+section>.wrap>h2{font-size:28px;margin:0 0 6px;letter-spacing:-.01em}
+section>.wrap>h2 .num{color:var(--accent);font-weight:700;margin-right:8px}
+.sub{color:var(--muted);margin:0 0 22px}
+h3{font-size:19px;margin:30px 0 8px}
+h4{font-size:15px;margin:20px 0 6px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+p{margin:0 0 14px}
+ul,ol{margin:0 0 16px;padding-left:22px}
+li{margin:4px 0}
+code{font-family:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;font-size:.9em;background:var(--surface2);padding:1px 6px;border-radius:5px}
+pre{background:var(--code-bg);color:var(--code-text);padding:16px 18px;border-radius:12px;overflow:auto;font-size:13.5px;line-height:1.55;margin:12px 0 18px;box-shadow:var(--shadow)}
+pre code{background:none;padding:0;color:inherit;font-size:inherit}
+pre .c{color:var(--code-dim)}
+pre .k{color:#8fb4ff}
+pre .s{color:#9be3b4}
+.fname{display:inline-block;font:12.5px ui-monospace,Consolas,monospace;background:var(--surface2);border:1px solid var(--line);border-bottom:none;padding:4px 10px;border-radius:8px 8px 0 0;margin-top:10px;color:var(--muted)}
+.fname+pre{margin-top:0;border-top-left-radius:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;box-shadow:var(--shadow);margin:14px 0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}nav.side{position:static;height:auto;border-right:none;border-bottom:1px solid var(--line)}.grid2,.grid3{grid-template-columns:1fr}.wrap{padding:0 16px}}
+.callout{border-left:4px solid var(--accent);background:var(--accent-bg);padding:12px 16px;border-radius:0 10px 10px 0;margin:16px 0}
+.callout.say{border-color:var(--ok);background:var(--ok-bg)}
+.callout.warn{border-color:var(--warn);background:var(--warn-bg)}
+.callout b.t{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px;color:var(--muted)}
+table{width:100%;border-collapse:collapse;margin:12px 0 20px;font-size:14.5px;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--surface2);font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+tr:last-child td{border-bottom:none}
+.tag{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:999px;font-weight:600}
+.tag.b{background:var(--bronze-bg);color:var(--bronze)} .tag.s{background:var(--silver-bg);color:var(--silver)} .tag.g{background:var(--gold-bg);color:var(--gold)} .tag.a{background:var(--accent-bg);color:var(--accent)} .tag.o{background:var(--ok-bg);color:var(--ok)} .tag.w{background:var(--warn-bg);color:var(--warn)}
+figure{margin:18px 0 24px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow)}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-size:13px;color:var(--muted);margin-top:8px;text-align:center}
+/* svg theming */
+svg text{font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;fill:var(--text)}
+svg .t{font-size:13px;font-weight:600} svg .ts{font-size:11px;fill:var(--muted)} svg .th{font-size:12px;font-weight:700;letter-spacing:.06em;fill:var(--muted)}
+svg .n{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+svg .nb{fill:var(--bronze-bg);stroke:var(--bronze);stroke-width:1.5}
+svg .ns{fill:var(--silver-bg);stroke:var(--silver);stroke-width:1.5}
+svg .ng{fill:var(--gold-bg);stroke:var(--gold);stroke-width:1.5}
+svg .na{fill:var(--accent-bg);stroke:var(--accent);stroke-width:1.5}
+svg .no{fill:var(--ok-bg);stroke:var(--ok);stroke-width:1.5}
+svg .band{fill:var(--surface2);stroke:var(--line);stroke-width:1;stroke-dasharray:5 4}
+svg .ar{stroke:var(--muted);stroke-width:1.8;fill:none}
+svg .arh{fill:var(--muted)}
+svg .ar2{stroke:var(--accent);stroke-width:1.8;fill:none;stroke-dasharray:6 4}
+.steps{counter-reset:s;list-style:none;padding:0}
+.steps li{counter-increment:s;position:relative;padding:10px 14px 10px 52px;margin:10px 0;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.steps li::before{content:counter(s);position:absolute;left:14px;top:10px;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0;margin:10px 0}
+details summary{cursor:pointer;padding:13px 18px;font-weight:600;list-style:none}
+details summary::-webkit-details-marker{display:none}
+details summary::before{content:"▸";display:inline-block;width:18px;color:var(--accent)}
+details[open] summary::before{content:"▾"}
+details .body{padding:0 18px 14px;border-top:1px solid var(--line)}
+.tree{font:13.5px/1.55 ui-monospace,Consolas,monospace;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 20px;overflow:auto;white-space:pre}
+.tree .d{color:var(--accent);font-weight:600}.tree .cm{color:var(--muted)}
+footer{padding:30px 0;color:var(--muted);font-size:13px;text-align:center}
+.themebtn{position:fixed;right:16px;bottom:16px;z-index:5;border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:999px;padding:8px 14px;cursor:pointer;box-shadow:var(--shadow);font-size:13px}
+@media print{nav.side,.themebtn{display:none}.layout{display:block}details{break-inside:avoid}details>*{display:block}pre{white-space:pre-wrap}}
+</style>
+</head>
+<body>
+<button class="themebtn" onclick="toggleTheme()">◐ Theme</button>
+<div class="layout">
+<nav class="side">
+  <h2>Contents</h2>
+  <a href="#pitch"><span class="n">1</span>The 60-second pitch</a>
+  <a href="#arch"><span class="n">2</span>Architecture</a>
+  <a href="#stack"><span class="n">3</span>Tech stack &amp; why</a>
+  <a href="#structure"><span class="n">4</span>Project structure</a>
+  <a href="#setup"><span class="n">5</span>Environment setup</a>
+  <a href="#bronze"><span class="n">6</span>Bronze: sources</a>
+  <a href="#silver"><span class="n">7</span>Silver technical</a>
+  <a href="#obt"><span class="n">8</span>Silver business: OBT</a>
+  <a href="#gold"><span class="n">9</span>Gold: dims &amp; fact</a>
+  <a href="#macro"><span class="n">10</span>Schema macro &amp; config</a>
+  <a href="#airflow"><span class="n">11</span>Airflow orchestration</a>
+  <a href="#docker"><span class="n">12</span>Docker deployment</a>
+  <a href="#run"><span class="n">13</span>One full run, end to end</a>
+  <a href="#problems"><span class="n">14</span>Problems I solved</a>
+  <a href="#limits"><span class="n">15</span>Limits &amp; improvements</a>
+  <a href="#qa"><span class="n">16</span>Interview Q&amp;A</a>
+  <a href="#cheat"><span class="n">17</span>Commands cheat sheet</a>
+</nav>
+<main>
+
+<header class="hero"><div class="wrap">
+  <h1>Walmart Lakehouse Pipeline<br><span style="color:var(--accent)">dbt + Databricks + Airflow</span></h1>
+  <p class="lead">An end-to-end, orchestrated ELT project: raw retail data lands in a Databricks bronze layer, dbt transforms it through silver and gold using the medallion pattern, and Apache Airflow (in Docker) runs the whole thing on a schedule.</p>
+  <div class="badges">
+    <span class="badge">Databricks (Delta Lake)</span><span class="badge">dbt Core 1.12</span><span class="badge">dbt-databricks 1.13</span>
+    <span class="badge">Apache Airflow 3.4</span><span class="badge">Docker Compose</span><span class="badge">Python 3.12 · uv</span><span class="badge">Jinja</span><span class="badge">SCD Type 2</span>
+  </div>
+</div></header>
+
+<!-- ============ 1 ============ -->
+<section id="pitch"><div class="wrap">
+<h2><span class="num">1</span>The 60-second pitch</h2>
+<p class="sub">Memorise this. Every other section is the detail behind one of these sentences.</p>
+<div class="callout say"><b class="t">Say this in an interview</b>
+“I built a retail analytics pipeline on the medallion architecture. Raw Walmart-style data – orders, order items, customers, products, employees and stores – is ingested into a <b>bronze</b> schema in Databricks by a Databricks job that handles change data capture. <b>dbt</b> then builds a <b>silver technical</b> layer with incremental merge models, a <b>silver business</b> layer that joins everything into one big table, and a <b>gold</b> layer with a fact table plus <b>SCD Type 2 dimensions</b> built with dbt snapshots. <b>Airflow</b>, running in Docker, orchestrates all of it: trigger the Databricks ingestion job and wait for it, clean dbt artefacts, check source freshness, then run and test each layer in order.”</div>
+
+<div class="grid3">
+  <div class="card"><h4>What</h4><p>A daily batch ELT pipeline producing analytics-ready tables: <code>fact_orders</code> and five history-tracking dimensions.</p></div>
+  <div class="card"><h4>How</h4><p>SQL + Jinja models in dbt, run against a Databricks SQL warehouse; orchestrated by an Airflow DAG with 10 ordered tasks.</p></div>
+  <div class="card"><h4>Why it matters</h4><p>Incremental loads keep cost low, tests protect quality, snapshots preserve history, and orchestration makes it repeatable.</p></div>
+</div>
+</div></section>
+
+<!-- ============ 2 ============ -->
+<section id="arch"><div class="wrap">
+<h2><span class="num">2</span>Architecture</h2>
+<p class="sub">Data flows left to right through three layers. Airflow sits on top and controls the order.</p>
+
+<figure>
+<svg viewBox="0 0 1100 470" role="img" aria-label="End to end architecture">
+  <defs><marker id="a1" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path class="arh" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+  <!-- Airflow band -->
+  <rect class="band" x="10" y="10" width="1080" height="84" rx="14"/>
+  <text class="th" x="28" y="34">ORCHESTRATION · APACHE AIRFLOW 3.4 (DOCKER COMPOSE, CELERY EXECUTOR)</text>
+  <rect class="na" x="28" y="46" width="190" height="36" rx="8"/><text class="t" x="123" y="69" text-anchor="middle">1 ingest_cdc</text>
+  <rect class="na" x="236" y="46" width="190" height="36" rx="8"/><text class="t" x="331" y="69" text-anchor="middle">2 clean_target · 3 freshness</text>
+  <rect class="na" x="444" y="46" width="190" height="36" rx="8"/><text class="t" x="539" y="69" text-anchor="middle">4-7 silver run + tests</text>
+  <rect class="na" x="652" y="46" width="190" height="36" rx="8"/><text class="t" x="747" y="69" text-anchor="middle">8 gold ephemeral</text>
+  <rect class="na" x="860" y="46" width="214" height="36" rx="8"/><text class="t" x="967" y="69" text-anchor="middle">9 snapshots · 10 fact run</text>
+
+  <!-- Source -->
+  <rect class="n" x="20" y="150" width="150" height="110" rx="12"/>
+  <text class="t" x="95" y="180" text-anchor="middle">Source data</text>
+  <text class="ts" x="95" y="200" text-anchor="middle">orders, items,</text><text class="ts" x="95" y="214" text-anchor="middle">customers, products,</text><text class="ts" x="95" y="228" text-anchor="middle">employees, stores</text>
+  <!-- Databricks job -->
+  <rect class="na" x="205" y="150" width="150" height="110" rx="12"/>
+  <text class="t" x="280" y="180" text-anchor="middle">Databricks Job</text>
+  <text class="ts" x="280" y="200" text-anchor="middle">CDC ingestion</text><text class="ts" x="280" y="214" text-anchor="middle">triggered + polled</text><text class="ts" x="280" y="228" text-anchor="middle">by Airflow (SDK)</text>
+  <!-- Bronze -->
+  <rect class="nb" x="390" y="150" width="150" height="110" rx="12"/>
+  <text class="t" x="465" y="180" text-anchor="middle">BRONZE</text>
+  <text class="ts" x="465" y="200" text-anchor="middle">walmart.bronze</text><text class="ts" x="465" y="214" text-anchor="middle">6 raw tables</text><text class="ts" x="465" y="228" text-anchor="middle">(dbt sources)</text>
+  <!-- Silver T -->
+  <rect class="ns" x="575" y="150" width="150" height="110" rx="12"/>
+  <text class="t" x="650" y="180" text-anchor="middle">SILVER · technical</text>
+  <text class="ts" x="650" y="200" text-anchor="middle">walmart.silver_t</text><text class="ts" x="650" y="214" text-anchor="middle">6 incremental</text><text class="ts" x="650" y="228" text-anchor="middle">MERGE models</text>
+  <!-- Silver B -->
+  <rect class="ns" x="760" y="150" width="150" height="110" rx="12"/>
+  <text class="t" x="835" y="180" text-anchor="middle">SILVER · business</text>
+  <text class="ts" x="835" y="200" text-anchor="middle">walmart.silver_b</text><text class="ts" x="835" y="214" text-anchor="middle">obt_b: one big</text><text class="ts" x="835" y="228" text-anchor="middle">joined table</text>
+  <!-- Gold -->
+  <rect class="ng" x="945" y="150" width="140" height="110" rx="12"/>
+  <text class="t" x="1015" y="180" text-anchor="middle">GOLD</text>
+  <text class="ts" x="1015" y="200" text-anchor="middle">walmart.gold</text><text class="ts" x="1015" y="214" text-anchor="middle">fact_orders +</text><text class="ts" x="1015" y="228" text-anchor="middle">5 SCD2 dim_*</text>
+  <!-- arrows -->
+  <path class="ar" d="M170,205 H203" marker-end="url(#a1)"/>
+  <path class="ar" d="M355,205 H388" marker-end="url(#a1)"/>
+  <path class="ar" d="M540,205 H573" marker-end="url(#a1)"/>
+  <path class="ar" d="M725,205 H758" marker-end="url(#a1)"/>
+  <path class="ar" d="M910,205 H943" marker-end="url(#a1)"/>
+  <!-- airflow control arrows -->
+  <path class="ar2" d="M123,82 V150" marker-end="url(#a1)"/>
+  <path class="ar2" d="M650,82 V150" marker-end="url(#a1)"/>
+  <path class="ar2" d="M835,82 V150" marker-end="url(#a1)"/>
+  <path class="ar2" d="M1015,82 V150" marker-end="url(#a1)"/>
+
+  <!-- Engine band -->
+  <rect class="band" x="390" y="300" width="695" height="70" rx="14"/>
+  <text class="th" x="408" y="322">TRANSFORMATION ENGINE (runs inside the Airflow containers)</text>
+  <rect class="no" x="408" y="330" width="200" height="30" rx="8"/><text class="t" x="508" y="350" text-anchor="middle">dbt Core 1.12 + Jinja</text>
+  <rect class="no" x="626" y="330" width="220" height="30" rx="8"/><text class="t" x="736" y="350" text-anchor="middle">dbt-databricks adapter 1.13</text>
+  <rect class="no" x="864" y="330" width="204" height="30" rx="8"/><text class="t" x="966" y="350" text-anchor="middle">Databricks SQL Warehouse</text>
+  <path class="ar" d="M650,260 V300" marker-end="url(#a1)"/><path class="ar" d="M835,260 V300" marker-end="url(#a1)"/><path class="ar" d="M1015,260 V300" marker-end="url(#a1)"/>
+
+  <!-- Docker -->
+  <rect class="band" x="10" y="395" width="1080" height="64" rx="14"/>
+  <text class="th" x="28" y="418">INFRASTRUCTURE</text>
+  <rect class="n" x="28" y="426" width="160" height="26" rx="7"/><text class="ts" x="108" y="443" text-anchor="middle">Docker Compose</text>
+  <rect class="n" x="204" y="426" width="160" height="26" rx="7"/><text class="ts" x="284" y="443" text-anchor="middle">Postgres (metadata)</text>
+  <rect class="n" x="380" y="426" width="160" height="26" rx="7"/><text class="ts" x="460" y="443" text-anchor="middle">Redis (Celery broker)</text>
+  <rect class="n" x="556" y="426" width="200" height="26" rx="7"/><text class="ts" x="656" y="443" text-anchor="middle">uv + Python 3.12 venv (dev)</text>
+  <rect class="n" x="772" y="426" width="300" height="26" rx="7"/><text class="ts" x="922" y="443" text-anchor="middle">VS Code + dbt Power User (dev tooling)</text>
+</svg>
+<figcaption>Figure 1 – End-to-end architecture. Solid arrows = data flow. Dashed arrows = Airflow controlling a stage.</figcaption>
+</figure>
+
+<h3>The medallion idea in one table</h3>
+<table>
+<tr><th>Layer</th><th>Schema</th><th>What it contains</th><th>Built by</th></tr>
+<tr><td><span class="tag b">Bronze</span></td><td><code>walmart.bronze</code></td><td>Raw data exactly as ingested. Never edited by dbt, only read as <em>sources</em>.</td><td>Databricks job (triggered by Airflow)</td></tr>
+<tr><td><span class="tag s">Silver technical</span></td><td><code>walmart.silver_t</code></td><td>Same shape as bronze, but de-duplicated by key, incrementally maintained, with a <code>processed_at</code> audit column and data tests.</td><td>dbt incremental models</td></tr>
+<tr><td><span class="tag s">Silver business</span></td><td><code>walmart.silver_b</code></td><td><code>obt_b</code>: all silver tables joined into one denormalised “One Big Table” with prefixed column names.</td><td>dbt table model with Jinja loop</td></tr>
+<tr><td><span class="tag g">Gold</span></td><td><code>walmart.gold</code></td><td>Consumption layer: <code>fact_orders</code> (measures + keys) and <code>dim_*</code> tables with full history.</td><td>dbt table + snapshots</td></tr>
+</table>
+</div></section>
+
+<!-- ============ 3 ============ -->
+<section id="stack"><div class="wrap">
+<h2><span class="num">3</span>Tech stack and why each piece</h2>
+<p class="sub">Interviewers love “why did you choose X?”. Here is the honest answer for each tool.</p>
+<table>
+<tr><th>Tool</th><th>Role in this project</th><th>Why it fits</th></tr>
+<tr><td><b>Databricks + Delta Lake</b></td><td>Storage and compute. Catalog <code>walmart</code>, schemas bronze / silver_t / silver_b / gold, queried through a SQL warehouse.</td><td>Delta gives ACID tables and <code>MERGE</code>, which makes incremental upserts possible. Unity Catalog gives the <code>catalog.schema.table</code> naming.</td></tr>
+<tr><td><b>dbt Core</b></td><td>All transformations: models, tests, snapshots, sources, macros.</td><td>SQL-first, version-controlled, dependency-aware (<code>ref()</code>/<code>source()</code>), built-in testing and docs/lineage.</td></tr>
+<tr><td><b>dbt-databricks adapter</b></td><td>Translates dbt into Databricks SQL (e.g. incremental → Delta <code>MERGE INTO</code>).</td><td>Official adapter; supports Unity Catalog and Delta features.</td></tr>
+<tr><td><b>Apache Airflow 3.4</b></td><td>Orchestrates: runs tasks in order, retries, shows status in a UI.</td><td>Python-defined DAGs, rich UI, can call the Databricks API and shell out to dbt.</td></tr>
+<tr><td><b>Docker Compose</b></td><td>Runs Airflow's api-server, scheduler, dag-processor, worker, triggerer, Postgres and Redis.</td><td>Reproducible environment; Airflow is not supported natively on Windows, containers solve this.</td></tr>
+<tr><td><b>Databricks SDK (Python)</b></td><td>Used in task <code>ingest_cdc</code> to run a Databricks job and poll its state.</td><td>Lets Airflow wait for ingestion to finish <em>before</em> any transformation starts.</td></tr>
+<tr><td><b>uv + Python 3.12</b></td><td>Local development environment (Python 3.12 virtual environment, kept outside this repository).</td><td>Fast, reproducible installs.</td></tr>
+<tr><td><b>VS Code + dbt Power User</b></td><td>Local development: compile/run buttons, lineage view, autocomplete.</td><td>Faster feedback loop than the CLI alone.</td></tr>
+</table>
+</div></section>
+
+<!-- ============ 4 ============ -->
+<section id="structure"><div class="wrap">
+<h2><span class="num">4</span>Project structure</h2>
+<p class="sub">What each folder and file is for.</p>
+<div class="tree"><span class="d">airflow_dbt_project/</span>
+├─ docker-compose.yaml            <span class="cm"># Airflow stack: Celery executor, Postgres, Redis, volumes</span>
+├─ .env.example                   <span class="cm"># template for .env (Databricks host/token, pip packages) – real .env is git-ignored</span>
+├─ .gitignore                     <span class="cm"># keeps secrets, target/, logs/ out of git</span>
+├─ <span class="d">dags/</span>orchestrate.py              <span class="cm"># THE pipeline DAG (10 tasks)</span>
+├─ <span class="d">config/</span>airflow.cfg  <span class="d">plugins/</span>  <span class="d">logs/</span>
+├─ <span class="d">docs/</span>PROJECT_GUIDE.html         <span class="cm"># this guide</span>
+└─ <span class="d">walmart_project/</span>                <span class="cm"># the dbt project, mounted into the containers at /opt/airflow/walmart_project</span>
+   ├─ dbt_project.yml              <span class="cm"># project name, paths, per-folder schema &amp; materialization</span>
+   ├─ profiles.yml.example         <span class="cm"># template for profiles.yml (Databricks connection) – real file is git-ignored</span>
+   ├─ <span class="d">models/</span>
+   │  ├─ <span class="d">sources/</span>sources.yml        <span class="cm"># declares the 6 bronze tables</span>
+   │  ├─ <span class="d">Silver_t/</span>                  <span class="cm"># SILVER technical</span>
+   │  │  ├─ customers_t.sql  employees_t.sql  stores_t.sql
+   │  │  ├─ products_t.sql   orders_t.sql     order_items_t.sql
+   │  │  └─ properties.yml           <span class="cm"># data tests (not_null, unique)</span>
+   │  ├─ <span class="d">silver_b/</span>obt_b.sql         <span class="cm"># SILVER business: One Big Table (Jinja-generated joins)</span>
+   │  └─ <span class="d">gold/</span>
+   │     ├─ <span class="d">ephemeral/</span>eph_customers|employees|orders|products|stores.sql
+   │     └─ <span class="d">fact/</span>fact_orders.sql
+   ├─ <span class="d">snapshots/</span>dim_customers|employees|orders|products|stores.yml   <span class="cm"># SCD Type 2</span>
+   ├─ <span class="d">macros/</span>custom_schema.sql      <span class="cm"># overrides generate_schema_name → clean schema names</span>
+   ├─ <span class="d">tests/</span>test_obt.sql            <span class="cm"># singular test on obt_b (severity: warn)</span>
+   └─ target/ logs/ dbt_packages/  <span class="cm"># generated – git-ignored</span></div>
+<div class="callout"><b class="t">Good to know</b>There is a single dbt project. Docker mounts <code>walmart_project/</code> into the containers, so what you edit is exactly what Airflow runs.</div>
+</div></section>
+
+<!-- ============ 5 ============ -->
+<section id="setup"><div class="wrap">
+<h2><span class="num">5</span>Environment setup – how it was built</h2>
+<p class="sub">The order in which the project was created, so you can retell it as a story.</p>
+<ol class="steps">
+<li><b>Python environment.</b> <code>uv</code> created <code>.venv</code> with Python 3.12. Dependencies in <code>pyproject.toml</code>: <code>dbt-core</code>, <code>dbt-databricks</code>, <code>databricks-sdk</code>, <code>apache-airflow</code>.</li>
+<li><b>dbt project.</b> <code>dbt init walmart_project</code> scaffolded the folders and picked the Databricks adapter.</li>
+<li><b>Connection.</b> <code>profiles.yml</code> holds host, SQL-warehouse <code>http_path</code>, catalog <code>walmart</code>, schema <code>dbt_schema</code>, and a personal access token. <code>dbt debug</code> confirmed “All checks passed”.</li>
+<li><b>IDE tooling.</b> The <em>dbt Power User</em> extension was pointed at the <code>.venv</code> interpreter so it can find dbt.</li>
+<li><b>Models built layer by layer</b> (sources → silver → OBT → gold → snapshots), running <code>dbt run</code> after each step.</li>
+<li><b>Orchestration.</b> The official Airflow <code>docker-compose.yaml</code> was customised; DAG written in <code>dags/orchestrate.py</code>.</li>
+<li><b>Secrets hygiene.</b> Token moved out of code into environment variables; <code>.gitignore</code> protects <code>.env</code> and <code>profiles.yml</code>.</li>
+</ol>
+<h4>profiles.yml (structure, no secrets)</h4>
+<pre><code>walmart_project:
+  target: dev
+  outputs:
+    dev:
+      type: databricks
+      host: &lt;workspace-host&gt;
+      http_path: /sql/1.0/warehouses/&lt;warehouse-id&gt;
+      catalog: walmart
+      schema: dbt_schema      <span class="c"># default schema; custom schemas override it (see section 10)</span>
+      threads: 1
+      token: &lt;personal-access-token&gt;</code></pre>
+</div></section>
+
+<!-- ============ 6 ============ -->
+<section id="bronze"><div class="wrap">
+<h2><span class="num">6</span>Bronze: declaring the sources</h2>
+<p class="sub">dbt does not create bronze. It declares it so models can read it safely and lineage is tracked.</p>
+<div class="fname">models/sources/sources.yml</div>
+<pre><code>sources:
+  - name: walmart_databricks      <span class="c"># logical name used in source('walmart_databricks', ...)</span>
+    database: walmart             <span class="c"># Unity Catalog catalog</span>
+    schema: bronze                <span class="c"># actual schema holding the raw tables</span>
+    tables:
+      - name: customers
+      - name: orders
+      - name: products
+      - name: employees
+      - name: order_items
+      - name: stores</code></pre>
+<p><b>Why sources?</b> Instead of hard-coding <code>walmart.bronze.orders</code>, models write <code>{{ source('walmart_databricks','orders') }}</code>. dbt then knows bronze is the root of the lineage graph, you can change the schema in one place, and <code>dbt source freshness</code> can monitor it.</p>
+<h4>The six tables and what they hold (inferred from the models)</h4>
+<table>
+<tr><th>Table</th><th>Key</th><th>Notable columns</th></tr>
+<tr><td>orders</td><td>order_id</td><td>store_id, customer_id, order_timestamp, payment_method, order_status, total_amount</td></tr>
+<tr><td>order_items</td><td>order_item_id</td><td>order_id, product_id, quantity, unit_price, line_amount</td></tr>
+<tr><td>customers</td><td>customer_id</td><td>first/last name, email, phone, city, province, country</td></tr>
+<tr><td>products</td><td>product_id</td><td>product_name, category, brand, price</td></tr>
+<tr><td>employees</td><td>employee_id</td><td>store_id, first/last name, email, job_title, salary</td></tr>
+<tr><td>stores</td><td>store_id</td><td>store_name, city, province, country</td></tr>
+</table>
+<p>Every table also carries <code>created_timestamp</code>, <code>updated_timestamp</code> and <code>is_active</code>. The <code>updated_timestamp</code> is what makes incremental loading possible.</p>
+<div class="callout warn"><b class="t">Be honest in the interview</b>The ingestion itself (CDC into bronze) is a <b>Databricks job</b> created in the Databricks workspace, outside this repository. This project's code triggers it and waits for it. Explain it as “the ingestion layer, which Airflow orchestrates”.</div>
+</div></section>
+
+<!-- ============ 7 ============ -->
+<section id="silver"><div class="wrap">
+<h2><span class="num">7</span>Silver technical – incremental models</h2>
+<p class="sub">Six near-identical models, one per bronze table. This is the heart of the incremental strategy.</p>
+<div class="fname">models/Silver_t/orders_t.sql</div>
+<pre><code>{{ config(
+    materialized='incremental',
+    unique_key='order_id'
+) }}
+select *,
+    current_timestamp() as processed_at
+from {{ source('walmart_databricks', 'orders') }}
+
+{% if is_incremental() %}
+where updated_timestamp &gt; (
+    SELECT COALESCE(MAX(updated_timestamp), '1900-01-01') FROM {{ this }}
+)
+{% endif %}</code></pre>
+
+<h3>Line by line</h3>
+<table>
+<tr><th>Piece</th><th>What it does</th></tr>
+<tr><td><code>materialized='incremental'</code></td><td>Don't rebuild the table each run. First run creates it; later runs only add or update changed rows.</td></tr>
+<tr><td><code>unique_key='order_id'</code></td><td>Tells dbt how to match new rows to existing ones. On Databricks this becomes a Delta <code>MERGE INTO … ON order_id = order_id</code>: matched rows are updated, unmatched are inserted. Result: <b>no duplicates</b>.</td></tr>
+<tr><td><code>select *, current_timestamp() as processed_at</code></td><td>Copies all bronze columns and adds an audit column: when dbt processed the row.</td></tr>
+<tr><td><code>source(...)</code></td><td>Reads from the declared bronze table.</td></tr>
+<tr><td><code>{% if is_incremental() %}</code></td><td>True only when the table already exists and the run is not <code>--full-refresh</code>. So the filter is skipped on the first run (full load) and applied afterwards.</td></tr>
+<tr><td><code>where updated_timestamp &gt; (select max(...) from {{ this }})</code></td><td>The <b>watermark</b>. <code>{{ this }}</code> is the silver table itself. Only bronze rows newer than the latest row already loaded are read. <code>COALESCE(..., '1900-01-01')</code> protects against an empty table.</td></tr>
+</table>
+
+<figure>
+<svg viewBox="0 0 1000 250" role="img" aria-label="Incremental flow">
+  <defs><marker id="a2" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path class="arh" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+  <text class="th" x="20" y="24">FIRST RUN (table does not exist)</text>
+  <rect class="nb" x="20" y="36" width="200" height="56" rx="10"/><text class="t" x="120" y="60" text-anchor="middle">bronze.orders</text><text class="ts" x="120" y="78" text-anchor="middle">all rows</text>
+  <path class="ar" d="M220,64 H300" marker-end="url(#a2)"/>
+  <rect class="n" x="300" y="36" width="260" height="56" rx="10"/><text class="t" x="430" y="60" text-anchor="middle">is_incremental() = false</text><text class="ts" x="430" y="78" text-anchor="middle">no WHERE → select everything</text>
+  <path class="ar" d="M560,64 H640" marker-end="url(#a2)"/>
+  <rect class="ns" x="640" y="36" width="230" height="56" rx="10"/><text class="t" x="755" y="60" text-anchor="middle">CREATE silver_t.orders_t</text><text class="ts" x="755" y="78" text-anchor="middle">full load</text>
+
+  <text class="th" x="20" y="140">EVERY LATER RUN</text>
+  <rect class="nb" x="20" y="152" width="200" height="72" rx="10"/><text class="t" x="120" y="176" text-anchor="middle">bronze.orders</text><text class="ts" x="120" y="194" text-anchor="middle">only rows with</text><text class="ts" x="120" y="208" text-anchor="middle">updated_timestamp &gt; watermark</text>
+  <path class="ar" d="M220,188 H300" marker-end="url(#a2)"/>
+  <rect class="n" x="300" y="152" width="260" height="72" rx="10"/><text class="t" x="430" y="176" text-anchor="middle">temp view orders_t__dbt_tmp</text><text class="ts" x="430" y="194" text-anchor="middle">watermark = MAX(updated_timestamp)</text><text class="ts" x="430" y="208" text-anchor="middle">taken from the existing silver table</text>
+  <path class="ar" d="M560,188 H640" marker-end="url(#a2)"/>
+  <rect class="ns" x="640" y="152" width="230" height="72" rx="10"/><text class="t" x="755" y="176" text-anchor="middle">MERGE INTO orders_t</text><text class="ts" x="755" y="194" text-anchor="middle">ON order_id → update if match,</text><text class="ts" x="755" y="208" text-anchor="middle">insert if new</text>
+</svg>
+<figcaption>Figure 2 – Incremental model: first run vs later runs.</figcaption>
+</figure>
+
+<h3>The six models</h3>
+<table>
+<tr><th>Model</th><th>Source table</th><th>unique_key</th></tr>
+<tr><td>customers_t</td><td>bronze.customers</td><td>customer_id</td></tr>
+<tr><td>employees_t</td><td>bronze.employees</td><td>employee_id</td></tr>
+<tr><td>order_items_t</td><td>bronze.order_items</td><td>order_item_id</td></tr>
+<tr><td>orders_t</td><td>bronze.orders</td><td>order_id</td></tr>
+<tr><td>products_t</td><td>bronze.products</td><td>product_id</td></tr>
+<tr><td>stores_t</td><td>bronze.stores</td><td>store_id</td></tr>
+</table>
+
+<h3>Data tests</h3>
+<div class="fname">models/Silver_t/properties.yml</div>
+<pre><code>models:
+  - name: products_t
+    columns:
+      - name: product_id
+        data_tests:
+          - not_null
+          - unique:
+              config:
+                where: "price &gt; 0"     <span class="c"># only check rows with a positive price</span>
+  - name: orders_t
+    columns:
+      - name: order_id
+        data_tests:
+          - not_null
+          - unique</code></pre>
+<p>Tests run in Airflow right after the silver run (<code>dbt test --select silver_t</code>). If a test fails, the DAG stops and bad data never reaches business or gold.</p>
+</div></section>
+
+<!-- ============ 8 ============ -->
+<section id="obt"><div class="wrap">
+<h2><span class="num">8</span>Silver business – the One Big Table (<code>obt_b</code>)</h2>
+<p class="sub">One wide, denormalised table so analysts and gold models don't have to repeat the joins.</p>
+<div class="fname">models/silver_b/obt_b.sql (shortened)</div>
+<pre><code>{% set configs = [
+  { "table": "walmart.silver_t.orders_t",
+    "columns": """o.order_id, o.store_id, o.order_timestamp, ...
+                  o.created_timestamp AS order_created_timestamp, ...""",
+    "alias": "o" },
+  { "table": "walmart.silver_t.customers_t",
+    "columns": """c.customer_id, c.first_name AS customer_first_name, ...""",
+    "alias": "c", "join_condition": "o.customer_id = c.customer_id" },
+  { "table": "walmart.silver_t.order_items_t", ... "alias": "oi",
+    "join_condition": "o.order_id = oi.order_id" },
+  { "table": "walmart.silver_t.products_t",    ... "alias": "p",
+    "join_condition": "oi.product_id = p.product_id" },
+  { "table": "walmart.silver_t.employees_t",   ... "alias": "e",
+    "join_condition": "o.store_id = e.store_id" },
+  { "table": "walmart.silver_t.stores_t",      ... "alias": "s",
+    "join_condition": "o.store_id = s.store_id" }
+] %}
+
+SELECT
+  {% for config in configs %}
+    {{ config['columns'] }}{% if not loop.last %},{% endif %}
+  {% endfor %}
+FROM
+  {% for config in configs %}
+    {% if loop.first %}  {{ config['table'] }} AS {{ config['alias'] }}
+    {% else %} LEFT JOIN {{ config['table'] }} AS {{ config['alias'] }}
+         ON {{ config['join_condition'] }}
+    {% endif %}
+  {% endfor %}</code></pre>
+
+<h3>How it works</h3>
+<ol>
+<li><b>Metadata-driven.</b> A Jinja list describes each table: its name, the columns to pick (renamed with prefixes like <code>customer_city</code> vs <code>store_city</code> to avoid clashes), an alias, and how to join it.</li>
+<li><b>Two loops generate the SQL.</b> Loop 1 writes the <code>SELECT</code> list, inserting commas except after the last item. Loop 2 writes <code>FROM</code> + a chain of <code>LEFT JOIN</code>s; the first table is the base.</li>
+<li><b>LEFT JOINs from orders.</b> Every order is kept even if a customer or product is missing.</li>
+<li><b>Adding a table = adding one dict</b>, not rewriting SQL.</li>
+</ol>
+
+<figure>
+<svg viewBox="0 0 1000 300" role="img" aria-label="OBT joins">
+  <defs><marker id="a3" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path class="arh" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+  <rect class="ns" x="400" y="110" width="200" height="80" rx="12"/><text class="t" x="500" y="145" text-anchor="middle">orders_t  (o)</text><text class="ts" x="500" y="165" text-anchor="middle">base table</text>
+  <rect class="ns" x="60" y="20" width="200" height="60" rx="12"/><text class="t" x="160" y="47" text-anchor="middle">customers_t (c)</text><text class="ts" x="160" y="65" text-anchor="middle">o.customer_id = c.customer_id</text>
+  <rect class="ns" x="60" y="120" width="200" height="60" rx="12"/><text class="t" x="160" y="147" text-anchor="middle">order_items_t (oi)</text><text class="ts" x="160" y="165" text-anchor="middle">o.order_id = oi.order_id</text>
+  <rect class="ns" x="60" y="220" width="200" height="60" rx="12"/><text class="t" x="160" y="247" text-anchor="middle">products_t (p)</text><text class="ts" x="160" y="265" text-anchor="middle">oi.product_id = p.product_id</text>
+  <rect class="ns" x="740" y="20" width="200" height="60" rx="12"/><text class="t" x="840" y="47" text-anchor="middle">stores_t (s)</text><text class="ts" x="840" y="65" text-anchor="middle">o.store_id = s.store_id</text>
+  <rect class="ns" x="740" y="120" width="200" height="60" rx="12"/><text class="t" x="840" y="147" text-anchor="middle">employees_t (e)</text><text class="ts" x="840" y="165" text-anchor="middle">o.store_id = e.store_id</text>
+  <path class="ar" d="M400,130 L260,60" marker-end="url(#a3)"/><path class="ar" d="M400,150 H262" marker-end="url(#a3)"/>
+  <path class="ar" d="M160,180 V218" marker-end="url(#a3)"/>
+  <path class="ar" d="M600,130 L738,60" marker-end="url(#a3)"/><path class="ar" d="M600,150 H738" marker-end="url(#a3)"/>
+  <rect class="ng" x="400" y="225" width="200" height="56" rx="12"/><text class="t" x="500" y="250" text-anchor="middle">silver_b.obt_b</text><text class="ts" x="500" y="268" text-anchor="middle">one row per order item (×employees)</text>
+  <path class="ar2" d="M500,190 V223" marker-end="url(#a3)"/>
+</svg>
+<figcaption>Figure 3 – LEFT JOIN chain that produces obt_b.</figcaption>
+</figure>
+
+<div class="callout warn"><b class="t">Know the weak spot</b>Joining employees on <code>store_id</code> multiplies each order row by the number of employees in the store, which inflates sums such as <code>total_amount</code>. Also, <code>obt_b</code> uses hard-coded table names instead of <code>ref()</code>, so dbt cannot see the dependency (Airflow's task order is what protects it). Mention these as known improvements – it shows maturity (see section 15).</div>
+</div></section>
+
+<!-- ============ 9 ============ -->
+<section id="gold"><div class="wrap">
+<h2><span class="num">9</span>Gold – dimensions (SCD2) and fact</h2>
+<p class="sub">The star schema analysts actually query.</p>
+
+<h3>9.1 Ephemeral models: the “staging” step</h3>
+<p>Five models <code>eph_customers / employees / orders / products / stores</code> each pick one entity's columns out of <code>obt_b</code> with <code>SELECT DISTINCT</code>. They are <b>ephemeral</b>: dbt never creates a table for them; it inlines their SQL as a CTE into whatever references them (the snapshots).</p>
+<div class="fname">models/gold/ephemeral/eph_customers.sql</div>
+<pre><code>SELECT DISTINCT
+    customer_id, customer_first_name, customer_last_name, customer_email,
+    customer_phone, customer_city, customer_province, customer_country,
+    customer_created_timestamp, customer_updated_timestamp, customer_is_active,
+    customer_processed_at,
+    CURRENT_TIMESTAMP() AS customer_gold_processed_at
+FROM {{ ref('obt_b') }}</code></pre>
+<p><code>DISTINCT</code> is needed because <code>obt_b</code> repeats each customer once per order item.</p>
+
+<h3>9.2 Snapshots: SCD Type 2 dimensions</h3>
+<div class="fname">snapshots/dim_customers.yml</div>
+<pre><code>snapshots:
+  - name: dim_customers
+    relation: ref('eph_customers')          <span class="c"># what to snapshot</span>
+    config:
+      schema: gold
+      database: walmart
+      unique_key: customer_id               <span class="c"># business key</span>
+      strategy: timestamp                   <span class="c"># detect change by a timestamp column</span>
+      updated_at: customer_updated_timestamp
+      dbt_valid_to_current: "to_date('9999-12-31')"   <span class="c"># open rows end on 9999-12-31, not NULL</span></code></pre>
+<p><b>SCD Type 2</b> keeps history: when a tracked row changes, the old version is closed and a new version is inserted. dbt adds <code>dbt_valid_from</code>, <code>dbt_valid_to</code> and <code>dbt_scd_id</code>.</p>
+<table>
+<tr><th>customer_id</th><th>city</th><th>updated_timestamp</th><th>dbt_valid_from</th><th>dbt_valid_to</th></tr>
+<tr><td>101</td><td>Toronto</td><td>2026-01-10</td><td>2026-01-10</td><td>2026-06-05</td></tr>
+<tr><td>101</td><td><b>Ottawa</b></td><td>2026-06-05</td><td>2026-06-05</td><td>9999-12-31 <span class="tag o">current</span></td></tr>
+</table>
+<p>Example: customer 101 moved. Old facts still join to the Toronto version; new ones to Ottawa. Five snapshots exist:</p>
+<table>
+<tr><th>Snapshot</th><th>Built from</th><th>unique_key</th><th>updated_at</th></tr>
+<tr><td>dim_customers</td><td>eph_customers</td><td>customer_id</td><td>customer_updated_timestamp</td></tr>
+<tr><td>dim_employees</td><td>eph_employees</td><td>employee_id</td><td>employee_updated_timestamp</td></tr>
+<tr><td>dim_orders</td><td>eph_orders</td><td>order_id</td><td>order_updated_timestamp</td></tr>
+<tr><td>dim_products</td><td>eph_products</td><td>product_id</td><td>product_updated_timestamp</td></tr>
+<tr><td>dim_stores</td><td>eph_stores</td><td>store_id</td><td>store_updated_timestamp</td></tr>
+</table>
+
+<h3>9.3 The fact table</h3>
+<div class="fname">models/gold/fact/fact_orders.sql</div>
+<pre><code>SELECT
+    order_id, order_item_id,                      <span class="c">-- grain: one row per order item</span>
+    product_id, store_id, employee_id, customer_id,   <span class="c">-- foreign keys to the dims</span>
+    total_amount, quantity, unit_price, line_amount    <span class="c">-- measures</span>
+FROM {{ ref('obt_b') }}</code></pre>
+<p>Keys + measures only: all descriptive text lives in the dimensions. Materialised as a <b>table</b> in schema <code>gold</code> (via <code>dbt_project.yml</code>).</p>
+
+<figure>
+<svg viewBox="0 0 1000 380" role="img" aria-label="Star schema">
+  <defs><marker id="a4" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path class="arh" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+  <rect class="ng" x="370" y="130" width="260" height="120" rx="12"/>
+  <text class="t" x="500" y="158" text-anchor="middle">fact_orders</text>
+  <text class="ts" x="500" y="180" text-anchor="middle">order_id · order_item_id</text><text class="ts" x="500" y="196" text-anchor="middle">product_id · store_id · employee_id · customer_id</text><text class="ts" x="500" y="216" text-anchor="middle">total_amount · quantity</text><text class="ts" x="500" y="232" text-anchor="middle">unit_price · line_amount</text>
+  <rect class="ns" x="30" y="20" width="220" height="86" rx="12"/><text class="t" x="140" y="46" text-anchor="middle">dim_customers (SCD2)</text><text class="ts" x="140" y="66" text-anchor="middle">name, email, phone, city,</text><text class="ts" x="140" y="82" text-anchor="middle">province, country</text>
+  <rect class="ns" x="390" y="20" width="220" height="70" rx="12"/><text class="t" x="500" y="46" text-anchor="middle">dim_products (SCD2)</text><text class="ts" x="500" y="66" text-anchor="middle">name, category, brand, price</text>
+  <rect class="ns" x="750" y="20" width="220" height="86" rx="12"/><text class="t" x="860" y="46" text-anchor="middle">dim_stores (SCD2)</text><text class="ts" x="860" y="66" text-anchor="middle">name, city,</text><text class="ts" x="860" y="82" text-anchor="middle">province, country</text>
+  <rect class="ns" x="30" y="270" width="220" height="86" rx="12"/><text class="t" x="140" y="296" text-anchor="middle">dim_employees (SCD2)</text><text class="ts" x="140" y="316" text-anchor="middle">name, email, job_title,</text><text class="ts" x="140" y="332" text-anchor="middle">salary, store_id</text>
+  <rect class="ns" x="750" y="270" width="220" height="86" rx="12"/><text class="t" x="860" y="296" text-anchor="middle">dim_orders (SCD2)</text><text class="ts" x="860" y="316" text-anchor="middle">payment_method, status,</text><text class="ts" x="860" y="332" text-anchor="middle">order_timestamp</text>
+  <path class="ar" d="M250,80 L370,150" marker-end="url(#a4)"/><path class="ar" d="M500,90 V128" marker-end="url(#a4)"/><path class="ar" d="M750,80 L630,150" marker-end="url(#a4)"/>
+  <path class="ar" d="M250,290 L370,230" marker-end="url(#a4)"/><path class="ar" d="M750,290 L630,230" marker-end="url(#a4)"/>
+</svg>
+<figcaption>Figure 4 – Gold star schema: one fact, five slowly-changing dimensions.</figcaption>
+</figure>
+
+<h3>Full dbt lineage</h3>
+<figure>
+<svg viewBox="0 0 1000 340" role="img" aria-label="dbt lineage">
+  <defs><marker id="a5" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path class="arh" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+  <text class="th" x="20" y="18">SOURCES</text><text class="th" x="215" y="18">SILVER_T</text><text class="th" x="410" y="18">SILVER_B</text><text class="th" x="590" y="18">EPHEMERAL</text><text class="th" x="790" y="18">GOLD</text>
+  <g>
+  <rect class="nb" x="20" y="30" width="150" height="34" rx="8"/><text class="t" x="95" y="52" text-anchor="middle">bronze.customers</text>
+  <rect class="nb" x="20" y="74" width="150" height="34" rx="8"/><text class="t" x="95" y="96" text-anchor="middle">bronze.employees</text>
+  <rect class="nb" x="20" y="118" width="150" height="34" rx="8"/><text class="t" x="95" y="140" text-anchor="middle">bronze.order_items</text>
+  <rect class="nb" x="20" y="162" width="150" height="34" rx="8"/><text class="t" x="95" y="184" text-anchor="middle">bronze.orders</text>
+  <rect class="nb" x="20" y="206" width="150" height="34" rx="8"/><text class="t" x="95" y="228" text-anchor="middle">bronze.products</text>
+  <rect class="nb" x="20" y="250" width="150" height="34" rx="8"/><text class="t" x="95" y="272" text-anchor="middle">bronze.stores</text>
+  <rect class="ns" x="215" y="30" width="140" height="34" rx="8"/><text class="t" x="285" y="52" text-anchor="middle">customers_t</text>
+  <rect class="ns" x="215" y="74" width="140" height="34" rx="8"/><text class="t" x="285" y="96" text-anchor="middle">employees_t</text>
+  <rect class="ns" x="215" y="118" width="140" height="34" rx="8"/><text class="t" x="285" y="140" text-anchor="middle">order_items_t</text>
+  <rect class="ns" x="215" y="162" width="140" height="34" rx="8"/><text class="t" x="285" y="184" text-anchor="middle">orders_t</text>
+  <rect class="ns" x="215" y="206" width="140" height="34" rx="8"/><text class="t" x="285" y="228" text-anchor="middle">products_t</text>
+  <rect class="ns" x="215" y="250" width="140" height="34" rx="8"/><text class="t" x="285" y="272" text-anchor="middle">stores_t</text>
+  <path class="ar" d="M170,47 H213" marker-end="url(#a5)"/><path class="ar" d="M170,91 H213" marker-end="url(#a5)"/><path class="ar" d="M170,135 H213" marker-end="url(#a5)"/><path class="ar" d="M170,179 H213" marker-end="url(#a5)"/><path class="ar" d="M170,223 H213" marker-end="url(#a5)"/><path class="ar" d="M170,267 H213" marker-end="url(#a5)"/>
+  <rect class="ns" x="400" y="140" width="130" height="50" rx="10"/><text class="t" x="465" y="170" text-anchor="middle">obt_b</text>
+  <path class="ar" d="M355,47 L398,150" marker-end="url(#a5)"/><path class="ar" d="M355,91 L398,155" marker-end="url(#a5)"/><path class="ar" d="M355,135 L398,162" marker-end="url(#a5)"/><path class="ar" d="M355,179 L398,168" marker-end="url(#a5)"/><path class="ar" d="M355,223 L398,175" marker-end="url(#a5)"/><path class="ar" d="M355,267 L398,182" marker-end="url(#a5)"/>
+  <rect class="n" x="590" y="30" width="140" height="34" rx="8"/><text class="t" x="660" y="52" text-anchor="middle">eph_customers</text>
+  <rect class="n" x="590" y="74" width="140" height="34" rx="8"/><text class="t" x="660" y="96" text-anchor="middle">eph_employees</text>
+  <rect class="n" x="590" y="118" width="140" height="34" rx="8"/><text class="t" x="660" y="140" text-anchor="middle">eph_orders</text>
+  <rect class="n" x="590" y="162" width="140" height="34" rx="8"/><text class="t" x="660" y="184" text-anchor="middle">eph_products</text>
+  <rect class="n" x="590" y="206" width="140" height="34" rx="8"/><text class="t" x="660" y="228" text-anchor="middle">eph_stores</text>
+  <path class="ar" d="M530,155 L588,50" marker-end="url(#a5)"/><path class="ar" d="M530,158 L588,92" marker-end="url(#a5)"/><path class="ar" d="M530,162 L588,134" marker-end="url(#a5)"/><path class="ar" d="M530,168 L588,178" marker-end="url(#a5)"/><path class="ar" d="M530,174 L588,222" marker-end="url(#a5)"/>
+  <rect class="ng" x="790" y="30" width="190" height="34" rx="8"/><text class="t" x="885" y="52" text-anchor="middle">dim_customers</text>
+  <rect class="ng" x="790" y="74" width="190" height="34" rx="8"/><text class="t" x="885" y="96" text-anchor="middle">dim_employees</text>
+  <rect class="ng" x="790" y="118" width="190" height="34" rx="8"/><text class="t" x="885" y="140" text-anchor="middle">dim_orders</text>
+  <rect class="ng" x="790" y="162" width="190" height="34" rx="8"/><text class="t" x="885" y="184" text-anchor="middle">dim_products</text>
+  <rect class="ng" x="790" y="206" width="190" height="34" rx="8"/><text class="t" x="885" y="228" text-anchor="middle">dim_stores</text>
+  <path class="ar" d="M730,47 H788" marker-end="url(#a5)"/><path class="ar" d="M730,91 H788" marker-end="url(#a5)"/><path class="ar" d="M730,135 H788" marker-end="url(#a5)"/><path class="ar" d="M730,179 H788" marker-end="url(#a5)"/><path class="ar" d="M730,223 H788" marker-end="url(#a5)"/>
+  <rect class="ng" x="790" y="270" width="190" height="34" rx="8"/><text class="t" x="885" y="292" text-anchor="middle">fact_orders</text>
+  <path class="ar" d="M500,190 Q520,290 788,288" marker-end="url(#a5)"/>
+  </g>
+</svg>
+<figcaption>Figure 5 – dbt lineage: sources → silver_t → obt_b → ephemeral → snapshots; obt_b also feeds fact_orders directly. (Ephemeral models are inlined; they have no physical table.)</figcaption>
+</figure>
+</div></section>
+
+<!-- ============ 10 ============ -->
+<section id="macro"><div class="wrap">
+<h2><span class="num">10</span>Schema macro and project configuration</h2>
+<p class="sub">How tables end up in <code>silver_t</code>, <code>silver_b</code> and <code>gold</code> instead of a pile in one schema.</p>
+<div class="fname">dbt_project.yml (models section)</div>
+<pre><code>models:
+  walmart_project:
+    Silver_t:
+      +materialized: table       <span class="c"># default; each silver model overrides it to incremental</span>
+      +schema: Silver_t
+    silver_b:
+      +materialized: table
+      +schema: silver_b
+    gold:
+      +materialized: table
+      +schema: gold
+      ephemeral:
+        +materialized: ephemeral   <span class="c"># nothing is created, SQL is inlined</span></code></pre>
+<h3>The problem and the fix</h3>
+<p>By default dbt names a custom schema <code>&lt;target schema&gt;_&lt;custom schema&gt;</code>. With target schema <code>dbt_schema</code> I got <code>dbt_schema_Silver_t</code>, but I wanted exactly <code>silver_t</code>. dbt lets a project override its built-in macro by defining one with the same name:</p>
+<div class="fname">macros/custom_schema.sql</div>
+<pre><code>{% macro generate_schema_name(custom_schema_name, node) -%}
+    {%- set default_schema = target.schema -%}
+    {%- if custom_schema_name is none -%}
+        {{ default_schema }}                 <span class="c"># no custom schema → use dbt_schema</span>
+    {%- else -%}
+        {{ custom_schema_name | trim }}      <span class="c"># custom schema → use it as-is</span>
+    {%- endif -%}
+{%- endmacro %}</code></pre>
+<p>Databricks lower-cases schema names, so <code>Silver_t</code> becomes <code>silver_t</code>. The trade-off: dev and prod would now write to the same schema names, so a real setup would separate them by catalog or target.</p>
+</div></section>
+
+<!-- ============ 11 ============ -->
+<section id="airflow"><div class="wrap">
+<h2><span class="num">11</span>Airflow orchestration</h2>
+<p class="sub">One DAG, <code>orchestrate</code>, ten tasks in a straight line. Each task only starts if the previous one succeeded.</p>
+
+<figure>
+<svg viewBox="0 0 1000 300" role="img" aria-label="DAG graph">
+  <defs><marker id="a6" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path class="arh" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+  <text class="th" x="20" y="22">INGEST &amp; PREPARE</text>
+  <rect class="na" x="20" y="34" width="170" height="54" rx="10"/><text class="t" x="105" y="58" text-anchor="middle">1 ingest_cdc</text><text class="ts" x="105" y="76" text-anchor="middle">Databricks job + poll</text>
+  <rect class="n" x="230" y="34" width="170" height="54" rx="10"/><text class="t" x="315" y="58" text-anchor="middle">2 clean_target</text><text class="ts" x="315" y="76" text-anchor="middle">rm target + logs</text>
+  <rect class="n" x="440" y="34" width="170" height="54" rx="10"/><text class="t" x="525" y="58" text-anchor="middle">3 source_freshness</text><text class="ts" x="525" y="76" text-anchor="middle">dbt source freshness</text>
+  <path class="ar" d="M190,61 H228" marker-end="url(#a6)"/><path class="ar" d="M400,61 H438" marker-end="url(#a6)"/>
+  <path class="ar" d="M610,61 H650 Q680,61 680,100 V120 H105 V150" marker-end="url(#a6)"/>
+  <text class="th" x="20" y="140">SILVER</text>
+  <rect class="ns" x="20" y="152" width="170" height="54" rx="10"/><text class="t" x="105" y="176" text-anchor="middle">4 silver_technical</text><text class="ts" x="105" y="194" text-anchor="middle">dbt run -s silver_t</text>
+  <rect class="ns" x="230" y="152" width="170" height="54" rx="10"/><text class="t" x="315" y="176" text-anchor="middle">5 silver_tech_tests</text><text class="ts" x="315" y="194" text-anchor="middle">dbt test -s silver_t</text>
+  <rect class="ns" x="440" y="152" width="170" height="54" rx="10"/><text class="t" x="525" y="176" text-anchor="middle">6 silver_business</text><text class="ts" x="525" y="194" text-anchor="middle">dbt run -s silver_b</text>
+  <rect class="ns" x="650" y="152" width="170" height="54" rx="10"/><text class="t" x="735" y="176" text-anchor="middle">7 silver_biz_tests</text><text class="ts" x="735" y="194" text-anchor="middle">dbt test -s silver_b</text>
+  <path class="ar" d="M190,179 H228" marker-end="url(#a6)"/><path class="ar" d="M400,179 H438" marker-end="url(#a6)"/><path class="ar" d="M610,179 H648" marker-end="url(#a6)"/>
+  <path class="ar" d="M820,179 H850 Q880,179 880,215 V232 H105 V250" marker-end="url(#a6)"/>
+  <text class="th" x="20" y="240">GOLD</text>
+  <rect class="ng" x="20" y="252" width="170" height="40" rx="10"/><text class="t" x="105" y="270" text-anchor="middle">8 gold_ephemeral</text><text class="ts" x="105" y="285" text-anchor="middle">dbt run -s gold/ephemeral</text>
+  <rect class="ng" x="230" y="252" width="170" height="40" rx="10"/><text class="t" x="315" y="270" text-anchor="middle">9 gold_dimensions</text><text class="ts" x="315" y="285" text-anchor="middle">dbt snapshot</text>
+  <rect class="ng" x="440" y="252" width="170" height="40" rx="10"/><text class="t" x="525" y="270" text-anchor="middle">10 gold_facts</text><text class="ts" x="525" y="285" text-anchor="middle">dbt run -s gold/fact</text>
+  <path class="ar" d="M190,272 H228" marker-end="url(#a6)"/><path class="ar" d="M400,272 H438" marker-end="url(#a6)"/>
+</svg>
+<figcaption>Figure 6 – The DAG: ingest → clean → freshness → silver (run/test ×2) → gold.</figcaption>
+</figure>
+
+<div class="fname">dags/orchestrate.py – Task 1: trigger and wait for ingestion</div>
+<pre><code>@dag
+def orchestrate():
+
+    @task
+    def ingest_cdc():
+        ws = WorkspaceClient()               <span class="c"># reads DATABRICKS_HOST / DATABRICKS_TOKEN from env</span>
+        job_trigger = ws.jobs.run_now(job_id=...)    <span class="c"># start the Databricks job</span>
+
+        while True:                                    <span class="c"># poll every 5 seconds</span>
+            job_run = ws.jobs.get_run(job_trigger.run_id)
+            if job_run.state.life_cycle_state in [TERMINATED, SKIPPED, INTERNAL_ERROR]:
+                if job_run.state.result_state == RunResultState.SUCCESS:
+                    break                              <span class="c"># success → continue DAG</span>
+                else:
+                    raise Exception("Job failed ...")  <span class="c"># fail → DAG stops here</span>
+            time.sleep(5)
+        return "CDC Ingestion Completed"</code></pre>
+<p><b>Why poll?</b> <code>run_now</code> returns immediately. Without waiting, dbt could start transforming before new data is in bronze. Polling makes ingestion a real dependency. The token is not in the code any more; the SDK reads it from the environment.</p>
+
+<div class="fname">Tasks 2–3: shell tasks</div>
+<pre><code>@task.bash
+def clean_target():
+    return "rm -rf /opt/airflow/walmart_project/target && rm -rf /opt/airflow/walmart_project/logs"
+
+@task.bash
+def source_freshness():
+    return "cd /opt/airflow/walmart_project &amp;&amp; dbt source freshness"</code></pre>
+<p><code>clean_target</code> removes stale compiled artefacts (e.g. a <code>manifest.json</code> built on Windows) so every run is clean. <code>source_freshness</code> needs a <code>cd</code> because bash tasks start in a temp directory, not the dbt project.</p>
+
+<div class="fname">Tasks 4–10: BashOperators, then the chain</div>
+<pre><code>silver_technical = BashOperator(task_id='silver_technical',
+    cwd='/opt/airflow/walmart_project', bash_command='dbt run --select silver_t')
+... silver_technical_tests  → 'dbt test --select silver_t'
+... silver_business         → 'dbt run --select silver_b'
+... silver_business_tests   → 'dbt test --select silver_b'
+... gold_ephermeral         → 'dbt run --select gold/ephemeral'
+... gold_dimensions         → 'dbt snapshot'
+... gold_facts              → 'dbt run --select gold/fact'
+
+ingest_cdc() &gt;&gt; clean_target() &gt;&gt; source_freshness() &gt;&gt; silver_technical
+  &gt;&gt; silver_technical_tests &gt;&gt; silver_business &gt;&gt; silver_business_tests
+  &gt;&gt; gold_ephermeral &gt;&gt; gold_dimensions &gt;&gt; gold_facts
+
+orchestrate_dag = orchestrate()</code></pre>
+<ul>
+<li><code>&gt;&gt;</code> means “then”. If any task fails, downstream tasks are marked <em>upstream_failed</em> and do not run.</li>
+<li><code>cwd=</code> runs the command inside the dbt project so dbt finds <code>dbt_project.yml</code> and <code>profiles.yml</code>.</li>
+<li>Tests sit between layers as <b>quality gates</b>: bad silver data never reaches gold.</li>
+<li>The ordering is why <code>obt_b</code> is safe even without <code>ref()</code>: silver_t is always finished before silver_b starts.</li>
+</ul>
+</div></section>
+
+<!-- ============ 12 ============ -->
+<section id="docker"><div class="wrap">
+<h2><span class="num">12</span>Docker deployment of Airflow</h2>
+<p class="sub">Why containers, and what each container does.</p>
+<figure>
+<svg viewBox="0 0 1000 330" role="img" aria-label="Docker services">
+  <defs><marker id="a7" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path class="arh" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+  <rect class="band" x="10" y="10" width="980" height="310" rx="16"/><text class="th" x="28" y="34">DOCKER COMPOSE · image apache/airflow:3.4.0 · packages added at startup: databricks-sdk, dbt-databricks</text>
+  <rect class="na" x="40" y="60" width="200" height="70" rx="10"/><text class="t" x="140" y="88" text-anchor="middle">api-server</text><text class="ts" x="140" y="108" text-anchor="middle">UI + REST · port 8080</text>
+  <rect class="na" x="270" y="60" width="200" height="70" rx="10"/><text class="t" x="370" y="88" text-anchor="middle">scheduler</text><text class="ts" x="370" y="108" text-anchor="middle">decides what runs when</text>
+  <rect class="na" x="500" y="60" width="200" height="70" rx="10"/><text class="t" x="600" y="88" text-anchor="middle">dag-processor</text><text class="ts" x="600" y="108" text-anchor="middle">parses dags/*.py</text>
+  <rect class="na" x="730" y="60" width="220" height="70" rx="10"/><text class="t" x="840" y="88" text-anchor="middle">triggerer</text><text class="ts" x="840" y="108" text-anchor="middle">async / deferrable tasks</text>
+  <rect class="no" x="270" y="170" width="200" height="70" rx="10"/><text class="t" x="370" y="198" text-anchor="middle">worker (Celery)</text><text class="ts" x="370" y="218" text-anchor="middle">executes tasks: dbt, SDK</text>
+  <rect class="n" x="40" y="260" width="200" height="46" rx="10"/><text class="t" x="140" y="288" text-anchor="middle">Postgres · metadata DB</text>
+  <rect class="n" x="500" y="260" width="200" height="46" rx="10"/><text class="t" x="600" y="288" text-anchor="middle">Redis · Celery broker</text>
+  <rect class="n" x="730" y="170" width="220" height="136" rx="10"/><text class="t" x="840" y="196" text-anchor="middle">Mounted volumes</text><text class="ts" x="840" y="218" text-anchor="middle">./dags → /opt/airflow/dags</text><text class="ts" x="840" y="236" text-anchor="middle">./config, ./logs, ./plugins</text><text class="ts" x="840" y="254" text-anchor="middle">./walmart_project →</text><text class="ts" x="840" y="270" text-anchor="middle">/opt/airflow/walmart_project</text><text class="ts" x="840" y="290" text-anchor="middle">+ .env (secrets) injected</text>
+  <path class="ar" d="M370,130 V168" marker-end="url(#a7)"/><path class="ar" d="M600,260 L420,242" marker-end="url(#a7)"/><path class="ar" d="M140,260 V132" marker-end="url(#a7)"/>
+</svg>
+<figcaption>Figure 7 – Airflow containers and how they connect.</figcaption>
+</figure>
+<table>
+<tr><th>Component</th><th>Job</th></tr>
+<tr><td>api-server</td><td>Serves the web UI and API at <code>localhost:8080</code>.</td></tr>
+<tr><td>dag-processor</td><td>Reads the Python files in <code>dags/</code>, turns them into DAG definitions stored in the DB. If your DAG has an import error, it shows here.</td></tr>
+<tr><td>scheduler</td><td>Watches the metadata DB and queues tasks whose dependencies are met.</td></tr>
+<tr><td>worker (Celery)</td><td>Actually runs the tasks. This is where <code>dbt</code> and the Databricks SDK execute – so they must be installed in this image.</td></tr>
+<tr><td>Redis</td><td>Message queue between scheduler and Celery workers.</td></tr>
+<tr><td>Postgres</td><td>Airflow's metadata database: DAG runs, task states, users.</td></tr>
+</table>
+<div class="callout"><b class="t">Detail worth knowing</b><code>airflow.cfg</code> says <code>executor = LocalExecutor</code>, but the compose environment variable <code>AIRFLOW__CORE__EXECUTOR: CeleryExecutor</code> overrides it. Environment variables always beat the config file in Airflow.</div>
+<p>Secrets (<code>DATABRICKS_HOST</code>, <code>DATABRICKS_TOKEN</code>) live in <code>.env</code>, which Compose passes to every container. <code>_PIP_ADDITIONAL_REQUIREMENTS</code> installs <code>databricks-sdk dbt-databricks</code> at start-up – quick for development, but a custom Dockerfile is the production approach (faster starts, reproducible).</p>
+</div></section>
+
+<!-- ============ 13 ============ -->
+<section id="run"><div class="wrap">
+<h2><span class="num">13</span>One full run, end to end</h2>
+<p class="sub">Walk through this when asked “what happens when the pipeline runs?”</p>
+<ol class="steps">
+<li><b>Trigger.</b> Someone (or a schedule) triggers the <code>orchestrate</code> DAG. The scheduler queues <code>ingest_cdc</code>.</li>
+<li><b>Ingest.</b> The worker calls the Databricks Jobs API, starts the CDC job, and polls until it finishes. New or changed rows are now in <code>walmart.bronze.*</code>.</li>
+<li><b>Clean.</b> <code>target/</code> and <code>logs/</code> are deleted so nothing stale is reused.</li>
+<li><b>Freshness.</b> <code>dbt source freshness</code> checks that bronze is recent (it needs a <code>loaded_at_field</code> in <code>sources.yml</code> to measure anything).</li>
+<li><b>Silver technical.</b> Six incremental models read only rows whose <code>updated_timestamp</code> is newer than what silver already has and <code>MERGE</code> them in. Then <code>dbt test</code> checks keys are not null and unique.</li>
+<li><b>Silver business.</b> <code>obt_b</code> is rebuilt as a table by joining all silver tables.</li>
+<li><b>Gold.</b> Ephemeral models run (nothing is materialised); <code>dbt snapshot</code> compares each dimension to the previous version, closes changed rows and inserts new ones; <code>fact_orders</code> is rebuilt from <code>obt_b</code>.</li>
+<li><b>Done.</b> Analysts query <code>walmart.gold.fact_orders</code> joined to the <code>dim_*</code> tables. Every task's status and logs are visible in the Airflow UI.</li>
+</ol>
+</div></section>
+
+<!-- ============ 14 ============ -->
+<section id="problems"><div class="wrap">
+<h2><span class="num">14</span>Problems I hit and how I solved them</h2>
+<p class="sub">Real debugging stories – the best interview material. Each one: problem → cause → fix → lesson.</p>
+
+<details open><summary>1. dbt could not connect: “Invalid access token” (HTTP 403)</summary><div class="body">
+<p><b>Cause:</b> the token in <code>profiles.yml</code> was wrong or expired. <b>Fix:</b> generate a new personal access token, update the profile, run <code>dbt debug</code> from inside the project folder until “All checks passed”. <b>Lesson:</b> <code>dbt debug</code> first, always – and run dbt from the folder that contains <code>dbt_project.yml</code>.</p></div></details>
+
+<details><summary>2. Schema was <code>dbt_schema_Silver_t</code>, I wanted <code>silver_t</code></summary><div class="body">
+<p><b>Cause:</b> dbt's default <code>generate_schema_name</code> concatenates target schema and custom schema. <b>Fix:</b> override the macro in <code>macros/custom_schema.sql</code> to return the custom schema as-is. <b>Lesson:</b> dbt's built-ins are overridable macros.</p></div></details>
+
+<details><summary>3. Incremental run failed: “Syntax error at or near WHERE / updated_timestamp”</summary><div class="body">
+<p><b>Cause:</b> two bugs of the same family. First a second <code>WHERE</code> after an existing one; later an <code>and</code> with no <code>WHERE</code> before it. It only failed on the <em>second</em> run because <code>is_incremental()</code> is false on the first. <b>Fix:</b> a single <code>where updated_timestamp &gt; …</code> in every silver model. <b>Lesson:</b> test incremental logic with a second run, and read the compiled SQL in <code>target/compiled</code>.</p></div></details>
+
+<details><summary>4. <code>DELTA_MERGE_UNRESOLVED_EXPRESSION</code>: cannot resolve <code>store_id</code></summary><div class="body">
+<p><b>Cause:</b> <code>stores_t</code> had earlier been created from a copy-pasted products model, so the existing table had product columns; the merge on <code>store_id</code> found no such column. <b>Fix:</b> <code>dbt run --full-refresh</code> to rebuild with the right schema. <b>Lesson:</b> incremental models keep old structure; schema changes need a full refresh.</p></div></details>
+
+<details><summary>5. <code>obt_b</code> failed: table <code>order_items_t</code> not found</summary><div class="body">
+<p><b>Cause:</b> <code>obt_b</code> used hard-coded table names, so dbt did not know it depends on the silver tables and ran it (alphabetically) before they existed. A renamed model had also left a stale <code>orders_items_t</code> table. <b>Fix:</b> ran in the right order via separate Airflow tasks; dropped the stale table. <b>Lesson:</b> use <code>ref()</code> so dbt builds the dependency graph.</p></div></details>
+
+<details><summary>6. <code>uv pip install</code>: “Unexpected '', expected '-c', '-e', '-r'…”</summary><div class="body">
+<p><b>Cause:</b> <code>requirements.txt</code> was saved as UTF-16 (PowerShell redirect). <b>Fix:</b> re-save as UTF-8. <b>Lesson:</b> encoding bugs hide in the first byte.</p></div></details>
+
+<details><summary>7. Airflow: DAG missing in UI / <code>ModuleNotFoundError: No module named 'databricks'</code></summary><div class="body">
+<p><b>Cause:</b> the DAG imported the Databricks SDK, but the Airflow container's Python did not have it (my local <code>.venv</code> is a different Python). Earlier, a string with a missing closing quote caused a <code>SyntaxError</code>. <b>Fix:</b> installed <code>databricks-sdk</code> and <code>dbt-databricks</code> in the image via <code>_PIP_ADDITIONAL_REQUIREMENTS</code>; fixed the syntax. Checked with <code>airflow dags list-import-errors</code>. <b>Lesson:</b> a DAG file must import cleanly <em>inside the container</em>.</p></div></details>
+
+<details><summary>8. Secrets in code</summary><div class="body">
+<p><b>Cause:</b> the Databricks token was hard-coded in the DAG. <b>Fix:</b> removed it, read from environment variables via <code>.env</code>, git-ignored <code>.env</code> and <code>profiles.yml</code>, revoked and rotated the token. <b>Lesson:</b> secrets belong in environment/secret stores, never in source.</p></div></details>
+
+<details><summary>9. Airflow UI “not showing” after restart</summary><div class="body">
+<p><b>Cause:</b> every container pip-installed packages on start, so the API server took minutes to become healthy; the worker also stayed in <code>Created</code>. <b>Fix:</b> waited for health, started the worker with <code>docker compose up -d airflow-worker</code>. <b>Lesson:</b> check <code>docker compose ps</code> and logs before changing code; build a custom image to avoid slow starts.</p></div></details>
+</div></section>
+
+<!-- ============ 15 ============ -->
+<section id="limits"><div class="wrap">
+<h2><span class="num">15</span>Known limitations and what I would improve</h2>
+<p class="sub">Naming weaknesses yourself is a strength in interviews. Say “here is what I'd do next”.</p>
+<table>
+<tr><th>#</th><th>Limitation</th><th>Improvement</th></tr>
+<tr><td>1</td><td><code>obt_b</code> joins employees on <code>store_id</code>, multiplying rows and inflating sums.</td><td>Remove the join or aggregate employees separately; assert the grain with a unique test on <code>(order_id, order_item_id)</code>.</td></tr>
+<tr><td>2</td><td><code>obt_b</code> hard-codes table names, so lineage and ordering rely on Airflow.</td><td>Use <code>{{ ref('orders_t') }}</code> etc. in the config list.</td></tr>
+<tr><td>3</td><td><code>dim_orders</code> uses <code>order_id</code> as key but <code>eph_orders</code> has one row per order <em>item</em>, so keys can repeat.</td><td>Make the snapshot key unique (e.g. <code>order_id || order_item_id</code>) or move order attributes to a proper per-order dimension.</td></tr>
+<tr><td>4</td><td>Gold ephemeral models are “run” as a task, but ephemeral models create nothing.</td><td>Drop that task or build them as views; they are already inlined into the snapshots.</td></tr>
+<tr><td>5</td><td>No <code>loaded_at_field</code> in <code>sources.yml</code>, so source freshness measures nothing.</td><td>Add <code>loaded_at_field: updated_timestamp</code> with <code>warn_after</code>/<code>error_after</code>.</td></tr>
+<tr><td>6</td><td>Few tests (only products and orders keys); none on silver_b or gold.</td><td>Add <code>not_null</code>/<code>unique</code>/<code>relationships</code> tests across layers; consider dbt-expectations.</td></tr>
+<tr><td>7</td><td>Packages are pip-installed on every container start; secrets in a <code>.env</code> file.</td><td>Custom Dockerfile; Airflow Connections / a secrets backend.</td></tr>
+<tr><td>8</td><td>Single dev environment, schema macro ignores target.</td><td>Separate dev/prod catalogs or targets; CI (<code>dbt build --select state:modified+</code>) on pull requests.</td></tr>
+<tr><td>9</td><td>The DAG has no schedule, retries or alerts configured, and silver business/gold are full rebuilds.</td><td>Add <code>schedule</code>, <code>retries</code>, failure notifications; make <code>obt_b</code> and the fact incremental if data grows.</td></tr>
+</table>
+</div></section>
+
+<!-- ============ 16 ============ -->
+<section id="qa"><div class="wrap">
+<h2><span class="num">16</span>Interview Q&amp;A</h2>
+<p class="sub">Short, honest answers grounded in this project. Click to expand.</p>
+
+<details><summary>Walk me through the project.</summary><div class="body"><p>Use the 60-second pitch in section 1, then offer to go deeper into any layer.</p></div></details>
+<details><summary>What is the medallion architecture and why use it?</summary><div class="body"><p>Bronze = raw, silver = cleaned and conformed, gold = business-ready. It separates concerns, lets you reprocess downstream layers from raw data, and gives each audience the right level of trust and structure.</p></div></details>
+<details><summary>What is an incremental model and how does yours work?</summary><div class="body"><p>It only processes new or changed rows. Mine filters on <code>updated_timestamp</code> greater than the maximum already in the target, and uses <code>unique_key</code> so dbt issues a Delta <code>MERGE</code>: update existing keys, insert new ones. First run is a full load because <code>is_incremental()</code> is false.</p></div></details>
+<details><summary>What if a late-arriving record has an older timestamp than the watermark?</summary><div class="body"><p>It would be missed. Mitigations: a lookback window (e.g. watermark minus a day), a periodic <code>--full-refresh</code>, or using the ingestion timestamp instead of the business timestamp.</p></div></details>
+<details><summary>What is <code>unique_key</code> for?</summary><div class="body"><p>It identifies a row so dbt can update instead of duplicate. Without it, an incremental model just appends.</p></div></details>
+<details><summary>Explain SCD Type 2. How did you implement it?</summary><div class="body"><p>Keep every historical version of a dimension row with validity dates. I used dbt snapshots with the <code>timestamp</code> strategy on <code>updated_at</code>; dbt maintains <code>dbt_valid_from</code>/<code>dbt_valid_to</code>, and I set <code>dbt_valid_to_current</code> to <code>9999-12-31</code> so current rows are easy to filter.</p></div></details>
+<details><summary>Snapshot strategies: timestamp vs check?</summary><div class="body"><p><code>timestamp</code> relies on a reliable updated-at column (I have one). <code>check</code> compares chosen columns and is used when there is no trustworthy timestamp.</p></div></details>
+<details><summary>Why ephemeral models?</summary><div class="body"><p>They are reusable SQL fragments compiled into the downstream query as CTEs – no table to store or maintain. Good for light staging steps feeding snapshots. Downside: harder to debug and can't be queried directly.</p></div></details>
+<details><summary>What is a One Big Table and when is it a bad idea?</summary><div class="body"><p>A wide denormalised table that removes joins for consumers. It's simple and fast to query but duplicates data and can blur grain – as I saw with the employees join multiplying rows. A star schema is cleaner for BI; that's why gold has a fact and dimensions.</p></div></details>
+<details><summary>Why generate <code>obt_b</code> with Jinja?</summary><div class="body"><p>DRY and maintainable: the table list, columns and join conditions are data, and loops generate the SQL. Adding a source is a one-entry change. The cost is readability – I check the compiled SQL in <code>target/compiled</code>.</p></div></details>
+<details><summary>What's the difference between <code>ref()</code> and <code>source()</code>?</summary><div class="body"><p><code>source()</code> points to raw tables dbt doesn't build; <code>ref()</code> points to other dbt models. Both create lineage edges and resolve to the right database/schema.</p></div></details>
+<details><summary>How do you ensure data quality?</summary><div class="body"><p>dbt tests (not_null, unique, conditional via <code>where</code>) placed as gates between layers in Airflow, plus source freshness. Planned: relationship tests, tests on gold, and alerts.</p></div></details>
+<details><summary>Why Airflow and not just dbt Cloud / a cron job?</summary><div class="body"><p>The pipeline spans more than dbt: it triggers a Databricks ingestion job and must wait for it. Airflow gives dependencies, retries, history, and a UI across all steps.</p></div></details>
+<details><summary>How does Airflow know when the Databricks job is done?</summary><div class="body"><p>The task starts the job with the SDK, then polls <code>get_run</code> every 5 seconds until the lifecycle state is terminal, and raises if the result isn't SUCCESS. (A deferrable operator from the Databricks provider would avoid occupying a worker while waiting.)</p></div></details>
+<details><summary>What does <code>&gt;&gt;</code> do in the DAG?</summary><div class="body"><p>Sets task dependencies: left task must succeed before the right one starts. A failure marks downstream tasks <em>upstream_failed</em>.</p></div></details>
+<details><summary>How do you handle secrets?</summary><div class="body"><p>Not in code: environment variables from a git-ignored <code>.env</code> (SDK reads <code>DATABRICKS_HOST/TOKEN</code> automatically), <code>profiles.yml</code> git-ignored. For production: Airflow Connections or a secrets manager, short-lived/OAuth tokens, and rotation – I rotated a token after it was exposed.</p></div></details>
+<details><summary>Why did you override <code>generate_schema_name</code>?</summary><div class="body"><p>To get exact schema names (<code>silver_t</code>) instead of <code>dbt_schema_silver_t</code>. The trade-off is losing dev/prod isolation, so I'd separate environments by catalog.</p></div></details>
+<details><summary>What would you do to scale this?</summary><div class="body"><p>Increase dbt <code>threads</code>, make <code>obt_b</code> and the fact incremental, partition/Z-order Delta tables, add retries and alerting, CI with slim builds, and separate environments. Use Databricks Workflows or dbt task for jobs if Airflow isn't needed.</p></div></details>
+<details><summary>What was the hardest bug?</summary><div class="body"><p>Pick one from section 14 – the incremental failures are good: they passed the first run and only broke on the second, which taught me to test the incremental path and read compiled SQL.</p></div></details>
+</div></section>
+
+<!-- ============ 17 ============ -->
+<section id="cheat"><div class="wrap">
+<h2><span class="num">17</span>Commands cheat sheet</h2>
+<div class="grid2">
+<div class="card"><h4>dbt (run inside <code>walmart_project/</code>)</h4>
+<pre><code>dbt debug                 # check connection
+dbt deps                  # install packages
+dbt compile -s orders_t   # see compiled SQL
+dbt run                   # build all models
+dbt run -s silver_t       # one folder
+dbt run --full-refresh    # rebuild incrementals
+dbt test -s silver_t      # run tests
+dbt snapshot              # update SCD2 dims
+dbt source freshness      # check sources
+dbt build                 # run + test + snapshot</code></pre></div>
+<div class="card"><h4>Airflow / Docker (run inside <code>airflow_dbt_project/</code>)</h4>
+<pre><code>docker compose up -d
+docker compose down
+docker compose ps -a
+docker compose logs -f airflow-scheduler
+docker compose exec airflow-scheduler \
+   airflow dags list
+docker compose exec airflow-scheduler \
+   airflow dags list-import-errors
+# UI: http://localhost:8080</code></pre></div>
+</div>
+<div class="card"><h4>Local Python environment (optional, not part of this repo)</h4>
+<pre><code>uv sync                          # install from pyproject/uv.lock
+uv pip install -r requirements.txt
+.venv\Scripts\activate           # Windows</code></pre></div>
+
+<h3>Glossary</h3>
+<table>
+<tr><th>Term</th><th>Meaning</th></tr>
+<tr><td>CDC</td><td>Change Data Capture – capturing only inserted/updated/deleted rows from a source.</td></tr>
+<tr><td>Delta Lake</td><td>Storage layer giving ACID transactions and <code>MERGE</code> on data-lake files.</td></tr>
+<tr><td>Medallion</td><td>Bronze → silver → gold layering of data quality.</td></tr>
+<tr><td>Materialization</td><td>How dbt stores a model: view, table, incremental, ephemeral.</td></tr>
+<tr><td>Grain</td><td>What one row of a table represents (fact_orders: one order item).</td></tr>
+<tr><td>Watermark</td><td>The latest timestamp already processed; used to fetch only newer data.</td></tr>
+<tr><td>SCD2</td><td>Slowly Changing Dimension type 2 – history kept as separate dated rows.</td></tr>
+<tr><td>DAG</td><td>Directed Acyclic Graph – tasks with one-way dependencies; Airflow's pipeline unit.</td></tr>
+<tr><td>Star schema</td><td>A central fact table surrounded by dimension tables.</td></tr>
+</table>
+</div></section>
+
+<footer><div class="wrap">Generated from the actual project files · Walmart Lakehouse Pipeline (dbt · Databricks · Airflow)</div></footer>
+</main>
+</div>
+<script>
+function toggleTheme(){
+  var r=document.documentElement;
+  var dark=getComputedStyle(r).getPropertyValue('--bg').trim()==='#0e1320';
+  var next=dark?'light':'dark';
+  r.setAttribute('data-theme',next);
+  try{localStorage.setItem('theme',next)}catch(e){}
+}
+try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}
+</script>
+</body>
+</html>

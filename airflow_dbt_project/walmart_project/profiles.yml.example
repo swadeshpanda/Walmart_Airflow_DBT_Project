@@ -1,0 +1,13 @@
+# Copy this file to "profiles.yml" (same folder) and fill in your own values.
+# "profiles.yml" is git-ignored. dbt finds it because the DAG runs dbt from this folder.
+walmart_project:
+  target: dev
+  outputs:
+    dev:
+      type: databricks
+      host: <your-workspace>.cloud.databricks.com
+      http_path: /sql/1.0/warehouses/<your-sql-warehouse-id>
+      catalog: walmart
+      schema: dbt_schema          # default schema; custom schemas (silver_t, silver_b, gold) override it
+      threads: 1
+      token: <your-personal-access-token>
