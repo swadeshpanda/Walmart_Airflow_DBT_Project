@@ -203,15 +203,3 @@ dbt run                    # incremental runs
 dbt test
 dbt snapshot
 ```
-
-## Known limitations and roadmap
-
-- `obt_b` joins employees on `store_id`, which multiplies order rows; the employees join should be removed or aggregated.
-- `obt_b` uses hard-coded table names instead of `ref()`; ordering currently relies on Airflow.
-- `dim_orders` is keyed on `order_id` while its source has one row per order item.
-- Add `loaded_at_field` to the sources so `dbt source freshness` measures something, and add more data tests.
-- Build a custom Airflow image (instead of installing pip packages at start-up), add a schedule, retries and failure alerts, and separate dev and prod environments with CI.
-
-## License
-
-Add a license of your choice (for example MIT) before making the repository public.
