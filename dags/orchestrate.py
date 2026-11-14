@@ -4,6 +4,10 @@ from airflow.providers.standard.operators.bash import BashOperator
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.jobs import RunLifeCycleState, RunResultState
 
+# By default dbt only prints a warning and exits 0 when a --select matches nothing, so Airflow
+# would show the task as green even though no model ran. This makes such a run fail instead.
+FAIL_ON_EMPTY_SELECTION = '--warn-error-options \'{"error": ["NoNodesForSelectionCriteria", "NothingToDo"]}\''
+
 
 @dag
 def orchestrate():
@@ -43,31 +47,25 @@ def orchestrate():
     silver_technical = BashOperator(
         task_id='silver_technical',
         cwd='/opt/airflow/walmart_project',
-        bash_command='dbt run --select silver_t'
+        bash_command='dbt run --select Silver_t ' + FAIL_ON_EMPTY_SELECTION
     )
 
     silver_technical_tests = BashOperator(
         task_id='silver_technical_tests',
         cwd='/opt/airflow/walmart_project',
-        bash_command='dbt test --select silver_t'
+        bash_command='dbt test --select Silver_t ' + FAIL_ON_EMPTY_SELECTION
     )
 
     silver_business = BashOperator(
             task_id='silver_business',
             cwd='/opt/airflow/walmart_project',
-            bash_command='dbt run --select silver_b'
+            bash_command='dbt run --select silver_b ' + FAIL_ON_EMPTY_SELECTION
         )
 
     silver_business_tests = BashOperator(
         task_id='silver_business_tests',
         cwd='/opt/airflow/walmart_project',
-        bash_command='dbt test --select silver_b'
-    )
-
-    gold_ephermeral = BashOperator(
-        task_id='gold_ephermeral',
-        cwd='/opt/airflow/walmart_project',
-        bash_command='dbt run --select gold/ephemeral'
+        bash_command='dbt test --select silver_b ' + FAIL_ON_EMPTY_SELECTION
     )
 
     gold_dimensions = BashOperator(
@@ -79,9 +77,9 @@ def orchestrate():
     gold_facts = BashOperator(
         task_id='gold_facts',
         cwd='/opt/airflow/walmart_project',
-        bash_command='dbt run --select gold/fact'
+        bash_command='dbt run --select fact_orders ' + FAIL_ON_EMPTY_SELECTION
     )
 
-    ingest_cdc() >> clean_target() >> source_freshness() >> silver_technical >> silver_technical_tests  >> silver_business >> silver_business_tests >> gold_ephermeral >> gold_dimensions >> gold_facts
+    ingest_cdc() >> clean_target() >> source_freshness() >> silver_technical >> silver_technical_tests  >> silver_business >> silver_business_tests >> gold_dimensions >> gold_facts
 
 orchestrate_dag = orchestrate()

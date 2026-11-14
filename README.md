@@ -96,17 +96,18 @@ flowchart LR
 
 ### 4. Airflow: orchestration
 
-The `orchestrate` DAG runs ten tasks in order. If a task fails, everything after it is skipped.
+The `orchestrate` DAG runs nine tasks in order. If a task fails, everything after it is skipped.
 
 ```mermaid
 flowchart LR
     A[ingest_cdc] --> B[clean_target] --> C[source_freshness] --> D[silver_technical]
     D --> E[silver_technical_tests] --> F[silver_business] --> G[silver_business_tests]
-    G --> H[gold_ephemeral] --> I["gold_dimensions<br/>dbt snapshot"] --> J[gold_facts]
+    G --> I["gold_dimensions<br/>dbt snapshot"] --> J[gold_facts]
 ```
 
 - `ingest_cdc` starts the Databricks job through the Databricks SDK and polls until it finishes, so transformations never start on stale data.
 - The remaining tasks are shell tasks that run `dbt` inside the mounted dbt project.
+- The dbt tasks use `--warn-error-options` so a `--select` that matches no models fails the task instead of silently doing nothing.
 
 ### 5. Docker: runtime
 
