@@ -20,8 +20,8 @@ flowchart LR
     B --> ST[("Silver technical<br/>walmart.silver_t")]
     ST --> SB[("Silver business<br/>walmart.silver_b")]
     SB --> G[("Gold<br/>walmart.gold")]
-    AF{{"Apache Airflow<br/>in Docker"}} -. 1. triggers and waits .-> JOB
-    AF -. 2. runs dbt .-> ST
+    AF{{"Apache Airflow<br/>in Docker"}} -.->|"1. triggers and waits"| JOB
+    AF -.->|"2. runs dbt"| ST
     AF -.-> SB
     AF -.-> G
 ```
@@ -51,7 +51,7 @@ flowchart LR
     PG[("PostgreSQL<br/>raw tables")] --> CONN["Databricks connection<br/>to Postgres"]
     CONN --> JOB["Databricks job"]
     JOB --> BR[("walmart.bronze<br/>6 Delta tables")]
-    AF{{"Airflow<br/>Databricks SDK"}} -. run_now and poll .-> JOB
+    AF{{"Airflow<br/>Databricks SDK"}} -.->|"run_now and poll"| JOB
 ```
 
 ### 3. dbt: transformations
@@ -60,11 +60,21 @@ dbt reads bronze as *sources* and builds silver and gold on the Databricks SQL w
 
 ```mermaid
 flowchart LR
-    subgraph Sources["Bronze (sources)"]
-        S1[customers] & S2[employees] & S3[order_items] & S4[orders] & S5[products] & S6[stores]
+    subgraph Sources["Bronze sources"]
+        S1[customers]
+        S2[employees]
+        S3[order_items]
+        S4[orders]
+        S5[products]
+        S6[stores]
     end
-    subgraph Silver_T["silver_t (incremental)"]
-        T1[customers_t] & T2[employees_t] & T3[order_items_t] & T4[orders_t] & T5[products_t] & T6[stores_t]
+    subgraph Silver_T["silver_t incremental"]
+        T1[customers_t]
+        T2[employees_t]
+        T3[order_items_t]
+        T4[orders_t]
+        T5[products_t]
+        T6[stores_t]
     end
     S1 --> T1
     S2 --> T2
@@ -104,7 +114,7 @@ Airflow runs as a Docker Compose stack. The `dags/`, `config/`, `plugins/`, `log
 
 ```mermaid
 flowchart TB
-    subgraph Compose["Docker Compose · apache/airflow:3.4.0"]
+    subgraph Compose["Docker Compose - apache/airflow 3.4.0"]
         API["api-server<br/>UI · :8080"]
         SCH[scheduler]
         DAGP["dag-processor"]
